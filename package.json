@@ -1,0 +1,35 @@
+{
+  "name": "accessgateway",
+  "version": "1.0.0",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "concurrently  \"nodemon ./src/index.ts\"  \"nodemon ./services/chatting/src/index.ts\" \"nodemon ./services/Drive-System/index.ts\" "
+  },
+  "author": "",
+  "license": "ISC",
+  "description": "",
+  "dependencies": {
+    "bcrypt": "^5.1.1",
+    "concurrently": "^9.1.2",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.7",
+    "express": "^4.21.2",
+    "http-proxy-middleware": "^3.0.3",
+    "mongoose": "^8.11.0",
+    "nodemon": "^3.1.9",
+    "socket.io": "^4.8.1",
+    "types": "file:../../../../../../crypto-random-string",
+    "typs": "file:../../../../../../bcrypt"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.21.0",
+    "@types/bcrypt": "^5.0.2",
+    "@types/cors": "^2.8.17",
+    "@types/express": "^5.0.0",
+    "@types/node": "^22.13.8",
+    "eslint": "^9.21.0",
+    "globals": "^16.0.0",
+    "typescript": "^5.8.2",
+    "typescript-eslint": "^8.26.0"
+  }
+}

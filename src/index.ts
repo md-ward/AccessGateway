@@ -8,7 +8,8 @@ import { checkAccess } from "./middleware/accessApiCheck";
 
 import System from "./schema/system";
 import { Socket } from "net";
-import {proxyMiddleware , handleWebSocketUpgrade } from "./middleware/proxy";
+import { proxyMiddleware } from "./middleware/proxy";
+import { createProxyMiddleware } from "http-proxy-middleware";
 
 dotenv.config();
 
@@ -22,11 +23,50 @@ const server = http.createServer(app);
 
 // Attach Proxy Middleware
 app.use("/api/sys", systemRouter);
-app.use("/api", checkAccess, proxyMiddleware);
+
+const servicesLinks = {
+  chatting: "http://localhost:8002",
+  // attachments: "http://localhost:8003",
+  drive: "http://localhost:8003",
+};
+const proxy = createProxyMiddleware({
+  target: servicesLinks["chatting"],
+  changeOrigin: true,
+  ws: true,
+  pathRewrite: { "^/api": "" },
+  on: {
+    error: (err, req, res) => {
+      console.error("Proxy Error:", err.message);
+      if (res instanceof http.ServerResponse && res.headersSent) return;
+      if (res instanceof http.ServerResponse) {
+        res.writeHead(502, { "Content-Type": "application/json" });
+        res.end(JSON.stringify({ error: "Proxy request failed" }));
+      }
+    },
+    proxyReq: (proxyReq, req) => {
+      console.log("Forwarding request to:", servicesLinks["drive"]);
+
+      [
+        "x-access-token",
+        "x-refresh-token",
+        "x-system-id",
+        "x-api-key",
+        "x-user-id",
+        "x-forwarded-for",
+        "referer",
+      ].forEach((header) => {
+        if (req.headers[header]) {
+          proxyReq.setHeader(header, req.headers[header]);
+        }
+      });
+    },
+  },
+});
+app.use("/api", checkAccess, proxy);
 server.on(
   "upgrade",
   async (req: IncomingMessage, socket: Socket, head: Buffer) => {
-    handleWebSocketUpgrade(req, socket, head);
+    // handleWebSocketUpgrade(req, socket, head);
     try {
       const apiKey = req.headers["authorization"];
 

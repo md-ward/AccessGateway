@@ -44,7 +44,7 @@ const io = new Server(server, {
 io.use((socket, next) => {
   const origin = socket.handshake.headers.host as string;
 
-  if (origin !== "localhost:8000") {
+  if (origin !== "localhost:8002") {
     console.log(`Blocked WebSocket connection from ${origin}`);
     return next(new Error("WebSocket connections only allowed from proxy"));
   }
@@ -58,7 +58,7 @@ io.engine.on("headers", (headers) => {
     "x-access-token, x-api-key, x-user-id";
 });
 
-app.use("/user", (req, res) => {
+app.use("/user/register", (req, res) => {
   res.send("you did a req to /user");
 });
 app.use("/attachments", (req, res) => {

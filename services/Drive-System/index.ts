@@ -15,8 +15,12 @@ const app: Application = express();
 
 app.use(express.json());
 app.use(cors({ origin: "*" }));
+app.post("/user/register", (req, res) => {
+  console.log("Received request at /user/register");
+  res.json({ message: "User registered successfully!" });
+});
 
-app.use("/user", Userouter);
+// app.use("/user", Userouter);
 app.use("/folder", Folderrouter);
 app.use("/file", Filerouter);
 

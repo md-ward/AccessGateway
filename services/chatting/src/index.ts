@@ -4,13 +4,14 @@ import mongoose from "mongoose";
 import http from "http";
 import cors from "cors";
 import { Server, Socket } from "socket.io";
-import { sendMessage } from "./controllers/chatControllers";
+import { sendMessage, log } from "./controllers/chatControllers";
 import { Message } from "./schema/messageSchema";
 
 //* Load environment variables
 dotenv.config();
 
 const app: Application = express();
+app.use("/", log);
 app.use(express.json());
 app.use(
   cors({
@@ -28,7 +29,7 @@ app.use((req: Request, res: Response, next: NextFunction) => {
   }
 });
 
-const port = process.env.Chat_Port || 8002; // Default to 8002
+const port = process.env.Chat_Port || 3000; // Default to 8002
 const server = http.createServer(app);
 
 const io = new Server(server, {
@@ -42,12 +43,14 @@ const io = new Server(server, {
 
 //* Ensure WebSocket connections are only accepted from the proxy
 io.use((socket, next) => {
-  const origin = socket.handshake.headers.host as string;
+  const origin = socket.handshake.headers;
+  console.log(origin);
 
-  if (origin !== "localhost:8000") {
-    console.log(`Blocked WebSocket connection from ${origin}`);
-    return next(new Error("WebSocket connections only allowed from proxy"));
-  }
+  // if (origin !== "localhost:8000") {
+  //   console.log(`Blocked WebSocket connection from ${origin}`);
+  //   return next(new Error("WebSocket connections only allowed from proxy"));
+  // }
+
   next();
 });
 
@@ -76,7 +79,9 @@ io.on("connection", (socket: Socket) => {
   console.log(`🔵 User connected: ${socket.id}`);
 
   // ✅ Extract systemId and userId from handshake headers
-  const systemId = socket.handshake.headers["x-system-id"] as string;
+
+  // const systemId = socket.handshake.headers["x-system-id"] as string;
+  const systemId = "testtesttest";
   const userId = socket.handshake.query.user as string;
 
   if (!systemId || !userId) {
@@ -123,7 +128,7 @@ io.on("connection", (socket: Socket) => {
       console.log(`✅ Message forwarded to ${recipientId}`);
     } else {
       console.log(`❌ Recipient ${recipientId} is offline.`);
-    }   
+    }
   });
 
   // ✅ Handle User Disconnect
@@ -151,5 +156,3 @@ server.on("upgrade", (req) => {
 server.listen(port, () => {
   console.log(`Chatting Service is running on port ${port}`);
 });
-
-

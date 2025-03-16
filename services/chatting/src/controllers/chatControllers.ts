@@ -1,3 +1,4 @@
+import { Request, Response } from "express";
 import { Chat } from "../schema/chatSchema";
 import { Message } from "../schema/messageSchema";
 
@@ -50,5 +51,13 @@ export const sendMessage = async (
   } catch (error) {
     console.error("Error in sendMessage:", error);
     return new Error("Failed to send message");
+  }
+};
+
+export const log = async (req: Request, res: Response): Promise<void> => {
+  try {
+    res.status(200).send({ message: "hello from chat server" });
+  } catch (error) {
+    res.status(400).send(error);
   }
 };

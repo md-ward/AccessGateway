@@ -4,11 +4,11 @@ import {
   extendApiKey,
   getSystem,
 } from "../controllers/systemController";
-import { checkAccess } from "../middleware/accessApiCheck";
+// import { checkAccess } from "../middleware/accessApiCheck";
 
 const systemRouter = Router();
 systemRouter.post("/", createSystem);
-systemRouter.get("/", checkAccess, getSystem);
-systemRouter.put("/",extendApiKey);
+// systemRouter.get("/", checkAccess, getSystem);
+systemRouter.put("/", extendApiKey);
 
 export default systemRouter;

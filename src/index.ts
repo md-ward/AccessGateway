@@ -3,35 +3,32 @@ import mongoose from "mongoose";
 import dotenv from "dotenv";
 import cors from "cors";
 import express from "express";
+import ROUTES from "./middleware/routes";
+import setupProxies from "./middleware/proxy";
 import systemRouter from "./routes/systemRouter";
-import { checkAccess } from "./middleware/accessApiCheck";
-
 import System from "./schema/system";
 import { Socket } from "net";
-import {proxyMiddleware , handleWebSocketUpgrade } from "./middleware/proxy";
 
 dotenv.config();
 
 const app = express();
+
 app.use(cors({ origin: "*" }));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// Create HTTP server
-const server = http.createServer(app);
-
-// Attach Proxy Middleware
 app.use("/api/sys", systemRouter);
-app.use("/api", checkAccess, proxyMiddleware);
+const server = http.createServer(app); // ✅ Create the HTTP server separately
+// ✅ Pass the server instance to `setupProxies`
+setupProxies(app, server, ROUTES);
+
 server.on(
   "upgrade",
   async (req: IncomingMessage, socket: Socket, head: Buffer) => {
-    handleWebSocketUpgrade(req, socket, head);
     try {
       const apiKey = req.headers["authorization"];
 
       if (!apiKey) {
-        // console.error("❌ WebSocket Access Denied: Missing API key");
         socket.write("HTTP/1.1 401 Unauthorized\r\n\r\n");
         return socket.destroy();
       }
@@ -39,21 +36,16 @@ server.on(
       const system = await System.findOne({ apiKey });
 
       if (!system) {
-        // console.error("❌ WebSocket Access Denied: Invalid API key");
         socket.write("HTTP/1.1 401 Unauthorized\r\n\r\n");
         return socket.destroy();
       }
 
-      const date = new Date();
-      if (system.expiryDate && date > system.expiryDate) {
-        // console.error("❌ WebSocket Access Denied: API key expired");
+      if (system.expiryDate && new Date() > system.expiryDate) {
         socket.write("HTTP/1.1 403 Forbidden\r\n\r\n");
         return socket.destroy();
       }
 
-      // ✅ Attach systemId for tracking
       req.headers["x-system-id"] = system._id as string;
-      // console.log("✅ WebSocket Access Granted, forwarding to proxy...");
     } catch (error) {
       console.error("❌ WebSocket Access Error:", error);
       socket.write("HTTP/1.1 500 Internal Server Error\r\n\r\n");

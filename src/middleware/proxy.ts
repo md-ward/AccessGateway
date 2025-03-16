@@ -1,90 +1,27 @@
+import { Express } from "express";
 import { createProxyMiddleware } from "http-proxy-middleware";
-import http from "http";
-import net from "net";
-import { Request, Response } from "express";
+import { Server } from "http";
+import { Socket } from "net";
 
-const servicesLinks = {
-  chatting: "http://localhost:8002",
-  // attachments: "http://localhost:8003",
-  drive: "http://localhost:8003",
+const setupProxies = (
+  app: Express,
+  server: Server,
+  routes: { url: string; proxy: any }[]
+) => {
+  routes.forEach((r) => {
+    const proxyMiddleware = createProxyMiddleware(r.proxy);
+    app.use(r.url, proxyMiddleware);
+
+    // ✅ Handle WebSocket upgrades
+    if (r.proxy.ws) {
+      server.on("upgrade", (req, socket: any, head) => {
+        console.log(`WebSocket upgrade request for ${req.url}`);
+
+        // ✅ Explicitly cast `socket` as `Socket`
+        proxyMiddleware.upgrade?.(req, socket as Socket, head);
+      });
+    }
+  });
 };
 
-// Define CustomRequest interface
-interface CustomRequest extends Request {
-  body: {
-    service?: keyof typeof servicesLinks;
-  };
-}
-
-// Proxy middleware function
-function proxyMiddleware(
-  req: CustomRequest,
-  res: Response
-  // next: NextFunction
-) {
-  if (!req.body || !req.body.service) {
-    res.status(400).json({ error: "Request body is missing or invalid" });
-  }
-  console.log(req.body);
-
-  const service = req.body.service as keyof typeof servicesLinks;
-  const proxy = createProxyMiddleware({
-    target: servicesLinks[service],
-    changeOrigin: true,
-    ws: true, // Enable WebSocket support
-    pathRewrite: {
-      "^/api": "", // Rewrite /api/user -> /user
-    },
-    on: {
-      error: (error: Error) => console.error("Proxy Error:", error),
-      proxyReq: (proxyReq, req) => {
-        console.log("Proxying request to:", servicesLinks[service]);
-        console.log("Forwarding request to:", req.method);
-
-        // Forward custom headers
-        [
-          "x-access-token",
-          "x-refresh-token",
-          "x-system-id",
-          "x-api-key",
-          "x-user-id",
-          "x-forwarded-for",
-          "referer",
-        ].forEach((header) => {
-          if (req.headers[header]) {
-            proxyReq.setHeader(header, req.headers[header]);
-          }
-        });
-      },
-    },
-  });
-
-  proxy(req, res);
-  // res.send("Proxying request to " + servicesLinks[service]);
-}
-
-// WebSocket Upgrade Handling
-function handleWebSocketUpgrade(
-  req: http.IncomingMessage,
-  socket: net.Socket,
-  head: Buffer
-) {
-  if (!(req as CustomRequest).body || !(req as CustomRequest).body?.service) {
-    socket.destroy();
-    return;
-  }
-
-  const service = (req as CustomRequest).body?.service;
-  if (!service) {
-    socket.destroy();
-    return;
-  }
-  const proxy = createProxyMiddleware({
-    target: servicesLinks[service],
-    ws: true,
-  });
-
-  return proxy.upgrade(req, socket, head);
-}
-
-export { proxyMiddleware, handleWebSocketUpgrade };
+export default setupProxies;

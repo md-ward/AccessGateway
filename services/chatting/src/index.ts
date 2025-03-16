@@ -40,7 +40,7 @@ const io = new Server(server, {
   },
   allowEIO3: true,
 });
-
+const chatNamespace = io.of("/chat");
 //* Ensure WebSocket connections are only accepted from the proxy
 io.use((socket, next) => {
   const origin = socket.handshake.headers;
@@ -75,7 +75,7 @@ mongoose
 const onlineUsers: { [systemId: string]: { [userId: string]: string } } = {};
 
 //? ✅ Handle New WebSocket Connection
-io.on("connection", (socket: Socket) => {
+chatNamespace.on("connection", (socket: Socket) => {
   console.log(`🔵 User connected: ${socket.id}`);
 
   // ✅ Extract systemId and userId from handshake headers

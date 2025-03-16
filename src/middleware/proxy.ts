@@ -14,11 +14,11 @@ const setupProxies = (
 
     // ✅ Handle WebSocket upgrades
     if (r.proxy.ws) {
-      server.on("upgrade", (req, socket: any, head) => {
+      server.on("upgrade", (req, socket: Socket, head) => {
         console.log(`WebSocket upgrade request for ${req.url}`);
 
         // ✅ Explicitly cast `socket` as `Socket`
-        proxyMiddleware.upgrade?.(req, socket as Socket, head);
+        proxyMiddleware.upgrade(req, socket, head);
       });
     }
   });

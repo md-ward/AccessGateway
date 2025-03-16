@@ -34,7 +34,6 @@ const ROUTES = [
       pathRewrite: {
         [`^/drive`]: "",
       },
-      ws: true, // Enable WebSocket support
       on: {
         proxyReq: (proxyReq: any, req: Request, res: Response) => {
           if (req.headers["authorization"]) {

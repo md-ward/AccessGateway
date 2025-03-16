@@ -61,7 +61,7 @@ io.engine.on("headers", (headers) => {
     "x-access-token, x-api-key, x-user-id";
 });
 
-app.use("/user", (req, res) => {
+app.use("/user/register", (req, res) => {
   res.send("you did a req to /user");
 });
 app.use("/attachments", (req, res) => {

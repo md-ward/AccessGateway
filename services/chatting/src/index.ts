@@ -4,14 +4,13 @@ import mongoose from "mongoose";
 import http from "http";
 import cors from "cors";
 import { Server, Socket } from "socket.io";
-import { sendMessage, log } from "./controllers/chatControllers";
+import { sendMessage } from "./controllers/chatControllers";
 import { Message } from "./schema/messageSchema";
 
 //* Load environment variables
 dotenv.config();
 
 const app: Application = express();
-app.use("/", log);
 app.use(express.json());
 app.use(
   cors({
@@ -27,6 +26,12 @@ app.use((req: Request, res: Response, next: NextFunction) => {
   } else {
     next();
   }
+  app.use("/user/register", (req, res) => {
+    res.send("you did a req to /user");
+  });
+  app.use("/attachments", (req, res) => {
+    res.send("you did a req to /attachments");
+  });
 });
 
 const port = process.env.Chat_Port || 3000; // Default to 8002
@@ -61,12 +66,6 @@ io.engine.on("headers", (headers) => {
     "x-access-token, x-api-key, x-user-id";
 });
 
-app.use("/user/register", (req, res) => {
-  res.send("you did a req to /user");
-});
-app.use("/attachments", (req, res) => {
-  res.send("you did a req to /attachments");
-});
 //! MongoDB Connection
 mongoose
   .connect(process.env.Chat_DB_URL as string)

@@ -1,16 +1,23 @@
-import { Document, Model, model, Schema, Types } from "mongoose";
-import jwt from "jsonwebtoken";
+import { Document, Model, model, Schema } from "mongoose";
 import dotenv from "dotenv";
 import bcrypt from "bcrypt";
+import { Service } from "./companySchema";
 dotenv.config();
+enum Role {
+  ADMIN = "admin",
+  USER = "user",
+}
 export interface User extends Document {
   name: string;
   email: string;
   password: string;
-  token?: string;
-  team: string;
-  comp: Types.ObjectId;
+  team?: string;
+  role?: Role;
+  services?: Service[] | "All";
+
+  comp: Schema.Types.ObjectId[];
 }
+
 interface UserMethods {
   generateToken(): string;
   loginUser(): User;
@@ -45,26 +52,15 @@ const userSchema = new Schema<User, UserMethods, UserModel>(
       required: true,
     },
     comp: {
-      type: Schema.Types.ObjectId,
+      type: [Schema.Types.ObjectId],
       ref: "company",
       required: true,
     },
-    token: String,
   },
   {
     timestamps: true,
   }
 );
-userSchema.methods.generateToken = async function (): Promise<string> {
-  const token = jwt.sign(
-    { _id: this._id.toString() },
-    process.env.PASSWORD as string
-  );
-  this.token = token;
-  await this.save();
-  return token;
-};
-
 userSchema.statics.LoginUser = async function (
   email: string,
   password: string

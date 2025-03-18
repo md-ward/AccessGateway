@@ -1,6 +1,4 @@
-//libraries imports
 import { Request, Response } from "express";
-//schema import
 import { User } from "../schema/userSchema";
 
 export const registerUserAPI = async (
@@ -8,6 +6,7 @@ export const registerUserAPI = async (
   res: Response
 ): Promise<void> => {
   try {
+    
     const user = new User(req.body);
     await user.save();
     const token = user.generateToken();
@@ -31,16 +30,8 @@ export const loginUserAPI = async (
       return;
     }
 
-    const token = await user.generateToken();
+    const token = user.generateToken();
     res.status(200).send({ user, token });
-  } catch (error) {
-    res.status(400).send(error);
-  }
-};
-
-export const log = async (req: Request, res: Response): Promise<void> => {
-  try {
-    res.status(200).send({ message: "hello from drive server" });
   } catch (error) {
     res.status(400).send(error);
   }

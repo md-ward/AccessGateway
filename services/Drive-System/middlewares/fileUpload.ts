@@ -8,12 +8,15 @@ cloudinary.config({
   api_secret: process.env.API_SECRET,
 });
 
-const uploadImage = async (fileStream: any, fileName: any) => {
+const uploadImage = async (
+  fileStream: Buffer<ArrayBufferLike>,
+  fileName: string
+) => {
   const result = await uploadStream(fileStream, fileName);
   return result;
 };
 
-const uploadStream = (fileStream: any, name: any) => {
+const uploadStream = (fileStream: Buffer<ArrayBufferLike>, name: string) => {
   //wrapping into promise for using modern async/await
   return new Promise((resolve, reject) => {
     cloudinary.uploader

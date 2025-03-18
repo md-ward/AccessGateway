@@ -5,12 +5,12 @@ import {
   getFolderAPI,
   shareFolderAPI,
 } from "../controller/folderController";
-import verifyToken from "../middlewares/auth";
+import verifyToken from "../../../src/middleware/auth";
 
-const router = express.Router();
+const folderRouter = express.Router();
 
-router.post("/createfolder", verifyToken, createFolderAPI);
-router.get("/get/:folderId", verifyToken, getFolderAPI);
-router.post("/sharefolder", verifyToken, shareFolderAPI);
+folderRouter.post("/createfolder", verifyToken, createFolderAPI);
+folderRouter.get("/get/:folderId", verifyToken, getFolderAPI);
+folderRouter.post("/share", verifyToken, shareFolderAPI);
 
-export default router;
+export default folderRouter;

@@ -5,10 +5,12 @@ export enum Service {
   CHATTING = "chatting",
   ATTACHMENTS = "attachments",
   DRIVE = "drive",
+  STOCK = "stock",
+  
 }
 
 // Define the interface for TypeScript
-interface ISystem extends Document { 
+interface ICompany extends Document { 
   name: string;
   services: Service[];
   apiKey: string;
@@ -17,7 +19,7 @@ interface ISystem extends Document {
 }
 
 // Define the Mongoose Schema
-const SystemSchema = new Schema<ISystem>({
+const CompanySchema = new Schema<ICompany>({
   name: { type: String, required: true },
   services: {
     type: [String], // Store services as an array of strings
@@ -29,7 +31,7 @@ const SystemSchema = new Schema<ISystem>({
 });
 
 // Hash API key before saving
-SystemSchema.pre("save", async function (next) {
+CompanySchema.pre("save", async function (next) {
   if (this.isModified("apiKey")) {
     const salt = await bcrypt.genSalt(10);
     this.apiKey = await bcrypt.hash(this.apiKey, salt);
@@ -38,10 +40,10 @@ SystemSchema.pre("save", async function (next) {
 });
 
 // Method to validate API key
-SystemSchema.methods.validateApiKey = async function (candidateKey: string) {
+CompanySchema.methods.validateApiKey = async function (candidateKey: string) {
   return await bcrypt.compare(candidateKey, this.apiKey);
 };
 
 // Create the Mongoose model
-const System = mongoose.model<ISystem>("System", SystemSchema);
-export default System;
+const Company = mongoose.model<ICompany>("Company", CompanySchema);
+export default Company;

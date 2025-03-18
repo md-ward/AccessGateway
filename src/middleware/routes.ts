@@ -1,5 +1,5 @@
-import { Request, Response } from "express";
-import { createProxyMiddleware } from "http-proxy-middleware";
+import { Request } from "express";
+import { ClientRequest } from "http";
 
 const ROUTES = [
   {
@@ -12,7 +12,7 @@ const ROUTES = [
       },
       ws: true, // Enable WebSocket support
       on: {
-        proxyReq: (proxyReq: any, req: Request, res: Response) => {
+        proxyReq: (proxyReq: ClientRequest, req: Request) => {
           if (req.headers["authorization"]) {
             proxyReq.setHeader("Authorization", req.headers["authorization"]);
           }
@@ -29,13 +29,13 @@ const ROUTES = [
   {
     url: "/drive",
     proxy: {
-      target: "http://localhost:8003",
+      target: "http://localhost:8004",
       changeOrigin: true,
       pathRewrite: {
         [`^/drive`]: "",
       },
       on: {
-        proxyReq: (proxyReq: any, req: Request, res: Response) => {
+        proxyReq: (proxyReq: ClientRequest, req: Request) => {
           if (req.headers["authorization"]) {
             proxyReq.setHeader("Authorization", req.headers["authorization"]);
           }

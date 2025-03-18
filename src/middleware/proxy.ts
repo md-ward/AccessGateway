@@ -6,7 +6,10 @@ import { Socket } from "net";
 const setupProxies = (
   app: Express,
   server: Server,
-  routes: { url: string; proxy: any }[]
+  routes: {
+    url: string;
+    proxy: { target: string; changeOrigin?: boolean; ws?: boolean };
+  }[]
 ) => {
   routes.forEach((r) => {
     const proxyMiddleware = createProxyMiddleware(r.proxy);

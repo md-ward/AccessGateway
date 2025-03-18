@@ -2,17 +2,17 @@
 import { Response, Request } from "express";
 import { Types } from "mongoose";
 //schema import
-import { User } from "../schema/userSchema";
+import { User } from "../../../src/schema/userSchema";
 import { File } from "../schema/fileSchema";
 import { Folder } from "../schema/folderSchema";
 //tools import
-import { AuthRequest } from "../middlewares/auth";
+import { AuthRequest } from "../../../src/middleware/auth";
 
 //create Folder API
 export const createFolderAPI = async (
   req: Request,
   res: Response
-): Promise<any> => {
+): Promise<void> => {
   const authReq = req as AuthRequest;
   try {
     const folder = new Folder({
@@ -32,7 +32,7 @@ export const createFolderAPI = async (
 export const getFolderAPI = async (
   req: Request,
   res: Response
-): Promise<any> => {
+): Promise<void> => {
   const authReq = req as AuthRequest;
   try {
     const { folderId } = authReq.params; // Use params instead of body
@@ -40,12 +40,12 @@ export const getFolderAPI = async (
     const user = authReq.user;
 
     if (!user) {
-      return res.status(401).json({ error: "Unauthorized" });
+      res.status(401).json({ error: "Unauthorized" });
     }
 
     // Validate `folderId`
     if (!Types.ObjectId.isValid(folderId)) {
-      return res.status(400).json({ error: "Invalid folder ID" });
+      res.status(400).json({ error: "Invalid folder ID" });
     }
 
     // Find the folder
@@ -58,7 +58,7 @@ export const getFolderAPI = async (
       ],
     });
     if (!folder) {
-      return res.status(404).json({ error: "Folder not found" });
+      res.status(404).json({ error: "Folder not found" });
     }
     const folders = await Folder.find({ path: folderId });
     const files = await File.find({ path: folderId });
@@ -72,24 +72,24 @@ export const getFolderAPI = async (
 export const shareFolderAPI = async (
   req: Request,
   res: Response
-): Promise<any> => {
+): Promise<void> => {
   const authReq = req as AuthRequest;
   try {
     const { folderId, userIds } = authReq.body;
     const user = authReq.user;
 
     if (!user) {
-      return res.status(401).json({ error: "Unauthorized" });
+      res.status(401).json({ error: "Unauthorized" });
     }
 
     if (!userIds || userIds.length === 0) {
-      return res
+      res
         .status(400)
         .json({ error: "No users provided to share the folder with" });
     }
 
     if (!Types.ObjectId.isValid(folderId)) {
-      return res.status(400).json({ error: "Invalid folder ID" });
+      res.status(400).json({ error: "Invalid folder ID" });
     }
 
     const folder = await Folder.findOne({
@@ -97,7 +97,7 @@ export const shareFolderAPI = async (
       owner: user._id,
     });
     if (!folder) {
-      return res.status(404).json({ error: "Folder not found" });
+      res.status(404).json({ error: "Folder not found" });
     }
     const validUserIds = userIds.filter((id: string) =>
       Types.ObjectId.isValid(id)
@@ -105,22 +105,23 @@ export const shareFolderAPI = async (
     const existingUsers = await User.find({ _id: { $in: validUserIds } });
 
     if (existingUsers.length !== validUserIds.length) {
-      return res
+      res
         .status(400)
         .json({ error: "Some user IDs are invalid or do not exist" });
     }
+    if (folder) {
+      if (folder.access === "private") {
+        folder.access = "shared";
+      }
 
-    if (folder.access === "private") {
-      folder.access = "shared";
+      folder.sharedWith = Array.from(
+        new Set([...(folder.sharedWith || []), ...validUserIds])
+      );
+
+      await folder.save();
+
+      res.status(200).json({ message: "Folder shared successfully", folder });
     }
-
-    folder.sharedWith = Array.from(
-      new Set([...(folder.sharedWith || []), ...validUserIds])
-    );
-
-    await folder.save();
-
-    res.status(200).json({ message: "Folder shared successfully", folder });
   } catch (error) {
     res.status(500).json({ error });
   }

@@ -1,10 +1,10 @@
 import { Request, Response } from "express";
-import System, { Service } from "../schema/system";
 import generateExpiryDate from "../utils/apiExpiry";
+import Company, { Service } from "../schema/companySchema";
 
 
-// Create System
-export const createSystem = async (
+// Create Company
+export const createCompany = async (
   req: Request,
   res: Response
 ): Promise<void> => {
@@ -29,27 +29,23 @@ export const createSystem = async (
       return;
     }
 
-    // Generate API Key
-    const generatedKey = crypto
-      .getRandomValues(new Uint32Array(1))[0]
-      .toString(16);
 
-    const system = new System({
+    const company = new Company({
       name,
       services,
       apiKey: generatedKey,
       expiryDate: generateExpiryDate.oneMonth(),
     });
 
-    await system.save();
-    res.status(201).json(system);
+    await company.save();
+    res.status(201).json(company);
   } catch (error) { 
     console.error(error);
     res.status(500).json({ message: "Server error", error });
   }
 };
 
-// Update System
+// Update Company
 export const extendApiKey = async (
   req: Request,
   res: Response
@@ -62,7 +58,7 @@ export const extendApiKey = async (
       return;
     }
 
-    const system = await System.findOneAndUpdate(
+    const company = await Company.findOneAndUpdate(
       { apiKey },
       { 
         expiryDate: generateExpiryDate.oneMonth(),
@@ -72,13 +68,13 @@ export const extendApiKey = async (
       }
     );
 
-    if (!system) {
-      res.status(404).json({ message: "System not found." });
+    if (!company) {
+      res.status(404).json({ message: "Company not found." });
       return;
     }
 
     res.status(200).send({
-      message: `API key Extended successfully till : ${system.expiryDate} `,
+      message: `API key Extended successfully till : ${company.expiryDate} `,
     });
   } catch (error) {
     console.error(error);
@@ -86,16 +82,3 @@ export const extendApiKey = async (
   }
 };
 
-// Get System by API Key
-export const getSystem = async (req: Request, res: Response): Promise<void> => {
-  try {
-    console.log(req.body.systemId);
-
-    res
-      .status(200)
-      .send({ message: "System found.", systemId: req.body.systemId });
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: "Server error", error });
-  }
-};

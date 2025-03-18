@@ -1,30 +1,20 @@
-import express, { Application, Request, Response } from "express";
+import express, { Application } from "express";
 import dotenv from "dotenv";
 import http from "http";
 import cors from "cors";
 import connectToMongoDB from "./DataBase/DB";
-import Userouter from "./routers/userRouter";
-import Folderrouter from "./routers/folderRouter";
-import Filerouter from "./routers/fileRouter";
-import { log } from "./controller/userController";
-// import { ExpressPeerServer } from "peer";
+import folderRouter from "./routers/folderRouter";
+import fileRouter from "./routers/fileRouter";
 
-// Load environment variables
 dotenv.config();
 
 const app: Application = express();
 
 app.use(express.json());
 app.use(cors({ origin: "*" }));
-app.post("/user/register", (req, res) => {
-  console.log("Received request at /user/register");
-  res.json({ message: "User registered successfully!" });
-});
 
-app.use("/user", Userouter);
-app.use("/", log);
-app.use("/folder", Folderrouter);
-app.use("/file", Filerouter);
+app.use("/folder", folderRouter);
+app.use("/file", fileRouter);
 
 const port = process.env.Drive_Port;
 const server = http.createServer(app);

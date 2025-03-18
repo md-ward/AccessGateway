@@ -4,10 +4,10 @@ import { Types } from "mongoose";
 //schema import
 import { File } from "../schema/fileSchema";
 import { Folder } from "../schema/folderSchema";
-import { User } from "../schema/userSchema";
+import { User } from "../../../src/schema/userSchema";
 //tools import
 import cloudinaryController from "../middlewares/fileUpload";
-import { AuthRequest } from "../middlewares/auth";
+import { AuthRequest } from "../../../src/middleware/auth";
 
 //create and upload file
 export const uploadFileAPI = async (

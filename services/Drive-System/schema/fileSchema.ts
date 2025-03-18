@@ -2,7 +2,7 @@ import { Document, model, Schema, Types } from "mongoose";
 
 export interface File extends Document {
   name: string;
-  size: Number;
+  size: number;
   type: string;
   path: Types.ObjectId | null;
   owner: Types.ObjectId;

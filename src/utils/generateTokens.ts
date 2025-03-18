@@ -4,7 +4,7 @@ dotenv.config();
 
 const TokenType = {
   USER: process.env.USER_SECRET,
-  COMPANY: process.env.COMPANY_SECRET,
+  OWNER: process.env.COMPANY_SECRET,
 } as const;
 
 enum ExpiryOption {
@@ -31,7 +31,10 @@ export async function verifyToken(token: string, type: keyof typeof TokenType) {
   }
 
   try {
-    const decoded = jwt.verify(token, TokenType[type] as string) as jwt.JwtPayload;
+    const decoded = jwt.verify(
+      token,
+      TokenType[type] as string
+    ) as jwt.JwtPayload;
 
     // Check expiry using JWT's built-in exp field
     if (decoded.exp && decoded.exp * 1000 < Date.now()) {
@@ -51,7 +54,8 @@ export async function verifyToken(token: string, type: keyof typeof TokenType) {
     return {
       valid: false,
       expired: error instanceof jwt.TokenExpiredError,
-      error: error instanceof Error ? error.message : "An unknown error occurred",
+      error:
+        error instanceof Error ? error.message : "An unknown error occurred",
     };
   }
 }

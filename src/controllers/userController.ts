@@ -1,37 +1,54 @@
 import { Request, Response } from "express";
 import { User } from "../schema/userSchema";
+import bcrypt from "bcrypt";
+import { ExpiryOption, generateToken } from "../utils/generateTokens";
 
-export const registerUserAPI = async (
+export const registerUser = async (
   req: Request,
   res: Response
 ): Promise<void> => {
   try {
-    
     const user = new User(req.body);
     await user.save();
-    const token = user.generateToken();
+    const token = await generateToken(
+      {
+        id: user.id,
+        role: user.role,
+        services: user.services,
+      },
+      "USER",
+      ExpiryOption.oneMonth
+    );
+    res.cookie("token", token, { httpOnly: true });
     res.status(201).send({ user, token });
   } catch (error) {
     res.status(400).send(error);
   }
 };
 
-export const loginUserAPI = async (
-  req: Request,
-  res: Response
-): Promise<void> => {
+export const loginUser = async (req: Request, res: Response): Promise<void> => {
   try {
     const { email, password } = req.body;
 
     const user = await User.findOne({ email });
-
-    if (!user || user.password !== password) {
-      res.status(400).send({ error: "Invalid credentials" });
-      return;
+    if (user) {
+      const isMatch = await bcrypt.compare(password, user.password as string);
+      if (isMatch && email === user.email) {
+        const token = await generateToken(
+          {
+            id: user.id,
+            role: user.role,
+            services: user.services,
+          },
+          "USER",
+          ExpiryOption.oneMonth
+        );
+        res.cookie("token", token, { httpOnly: true });
+        res.status(200).send({ message: "Login successful" });
+      }
+    } else {
+      res.status(401).send({ message: "Invalid email or password" });
     }
-
-    const token = user.generateToken();
-    res.status(200).send({ user, token });
   } catch (error) {
     res.status(400).send(error);
   }

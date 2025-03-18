@@ -1,7 +1,8 @@
 import { Request, Response } from "express";
 import generateExpiryDate from "../utils/apiExpiry";
 import Company, { Service } from "../schema/companySchema";
-
+import { Role, User } from "../schema/userSchema";
+import { ExpiryOption, generateToken } from "../utils/generateTokens";
 
 // Create Company
 export const createCompany = async (
@@ -9,7 +10,7 @@ export const createCompany = async (
   res: Response
 ): Promise<void> => {
   try {
-    const { name, services } = req.body;
+    const { name, companyName, services, email, password } = req.body;
 
     if (!name || !Array.isArray(services) || services.length === 0) {
       res
@@ -20,8 +21,7 @@ export const createCompany = async (
 
     // Validate services
     const validServices = Object.values(Service);
-    console.log(validServices);
-    
+
     if (
       !services.every((service: Service) => validServices.includes(service))
     ) {
@@ -29,17 +29,31 @@ export const createCompany = async (
       return;
     }
 
-
     const company = new Company({
-      name,
+      name: companyName,
       services,
-      apiKey: generatedKey,
       expiryDate: generateExpiryDate.oneMonth(),
     });
 
-    await company.save();
-    res.status(201).json(company);
-  } catch (error) { 
+    const user = new User({
+      role: Role.ADMIN,
+      name,
+      email,
+      password,
+      services,
+      comp: [company._id],
+    });
+    await Promise.all([company.save(), user.save()]);
+
+    const token = await generateToken(
+      { id: user._id, role: user.role, company: user.comp },
+      "OWNER",
+      ExpiryOption.oneMonth
+    );
+    res.cookie("token", token, { httpOnly: true });
+
+    res.status(201).json({ message: "Company created successfully." });
+  } catch (error) {
     console.error(error);
     res.status(500).json({ message: "Server error", error });
   }
@@ -53,6 +67,7 @@ export const extendApiKey = async (
   try {
     const apiKey = req.headers.authorization;
 
+    // should check payment then update api expiry
     if (!apiKey) {
       res.status(400).json({ message: "API key is required for updating." });
       return;
@@ -60,7 +75,7 @@ export const extendApiKey = async (
 
     const company = await Company.findOneAndUpdate(
       { apiKey },
-      { 
+      {
         expiryDate: generateExpiryDate.oneMonth(),
       },
       {
@@ -81,4 +96,3 @@ export const extendApiKey = async (
     res.status(500).json({ message: "Server error", error });
   }
 };
-

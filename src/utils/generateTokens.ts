@@ -1,5 +1,6 @@
 import jwt from "jsonwebtoken";
 import dotenv from "dotenv";
+import { NextFunction, Request, Response } from "express";
 dotenv.config();
 
 const TokenType = {
@@ -25,7 +26,13 @@ export async function generateToken(
   return jwt.sign(data, TokenType[type] as string, { expiresIn });
 }
 
-export async function verifyToken(token: string, type: keyof typeof TokenType) {
+export async function verifyToken(
+  token: string,
+  type: keyof typeof TokenType,
+  next: NextFunction,
+  req: Request,
+  res: Response
+): Promise<void> {
   if (!TokenType[type]) {
     throw new Error(`Invalid token type: ${type}`);
   }
@@ -38,25 +45,26 @@ export async function verifyToken(token: string, type: keyof typeof TokenType) {
 
     // Check expiry using JWT's built-in exp field
     if (decoded.exp && decoded.exp * 1000 < Date.now()) {
-      return {
+      res.status(400).send({
         valid: false,
         expired: true,
         error: "Token has expired",
-      };
+      });
     }
 
-    return {
+    req.body.valid = {
       valid: true,
       expired: false,
       decoded,
     };
+    next();
   } catch (error) {
-    return {
+    res.status(400).send({
       valid: false,
       expired: error instanceof jwt.TokenExpiredError,
       error:
         error instanceof Error ? error.message : "An unknown error occurred",
-    };
+    });
   }
 }
 

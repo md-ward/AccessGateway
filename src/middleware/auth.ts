@@ -1,6 +1,6 @@
 import jwt, { JwtPayload } from "jsonwebtoken";
 import { Request, Response, NextFunction } from "express";
-import { User } from "../schema/userSchema";
+import { Role, User } from "../schema/userSchema";
 import dotenv from "dotenv";
 
 dotenv.config();
@@ -19,7 +19,9 @@ async function verifyToken(
 ): Promise<void> {
   const authReq = req as AuthRequest;
   try {
-    const token = req.header("Authorization")?.replace("Bearer ", "");
+    const token = req.cookies.token;
+    console.log(token);
+
     if (!token) {
       res.status(401).send({ error: "No token provided" });
     }
@@ -29,27 +31,35 @@ async function verifyToken(
     }
 
     if (token) {
+      console.log("hello from hebad");
+
       const decoded = jwt.verify(
         token,
-        process.env.PASSWORD as string
+        process.env.COMPANY_SECRET as string
       ) as JwtPayload;
-      const user = await User.findOne({ _id: decoded._id, token });
+      console.log(decoded);
+
+      const user = await User.findById(decoded.id);
 
       if (!user) {
+        console.log("no user found");
         res.status(401).send({ error: "Unauthorized" });
       }
 
       authReq.token = token;
       if (user) {
-        authReq.user = user;
-      } else {
-        res.status(401).send({ error: "Unauthorized" });
+        if (user.role == Role.OWNER || user.role == Role.ADMIN) {
+          authReq.user = user;
+        } else {
+          res.status(401).send({ error: "Unauthorized" });
+          console.log("error role");
+        }
       }
     }
     next();
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
   } catch (error: unknown) {
-    res.status(401).send({ error: "Unauthorized" });
+    res.status(401).send({ error: error });
   }
 }
 

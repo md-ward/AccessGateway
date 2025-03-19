@@ -12,7 +12,6 @@ interface ICompany extends Document {
   name: string;
   services: Service[];
   expiryDate?: Date;
-  validateApiKey(candidateKey: string): Promise<boolean>;
 }
 
 // Define the Mongoose Schema

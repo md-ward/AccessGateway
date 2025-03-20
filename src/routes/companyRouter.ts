@@ -1,7 +1,7 @@
 import { Router } from "express";
 import { createCompany, extendApiKey } from "../controllers/companyController";
-import { verifyToken } from "../utils/generateTokens";
 import { loginUser, registerUser } from "../controllers/userController";
+import { verifyToken } from "../middleware/authCheck";
 
 const companyRouter = Router();
 companyRouter.post("/", createCompany);

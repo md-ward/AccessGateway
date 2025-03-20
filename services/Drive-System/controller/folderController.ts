@@ -6,18 +6,16 @@ import { User } from "../../../src/schema/userSchema";
 import { File } from "../schema/fileSchema";
 import { Folder } from "../schema/folderSchema";
 //tools import
-import { AuthRequest } from "../../../src/middleware/auth";
 
 //create Folder API
 export const createFolderAPI = async (
   req: Request,
   res: Response
 ): Promise<void> => {
-  const authReq = req as AuthRequest;
   try {
     const folder = new Folder({
       name: req.body.name,
-      owner: authReq.user._id,
+      owner: req.body.user._id ?? "",
       parent: req.body.parent || null,
       access: req.body.access || "private",
     });
@@ -33,12 +31,9 @@ export const getFolderAPI = async (
   req: Request,
   res: Response
 ): Promise<void> => {
-  const authReq = req as AuthRequest;
   try {
-    const { folderId } = authReq.params; // Use params instead of body
-    console.log(folderId);
-    const user = authReq.user;
-
+    const { folderId } = req.params; // Use params instead of body
+    const user = req.body.user;
     if (!user) {
       res.status(401).json({ error: "Unauthorized" });
     }
@@ -73,10 +68,8 @@ export const shareFolderAPI = async (
   req: Request,
   res: Response
 ): Promise<void> => {
-  const authReq = req as AuthRequest;
   try {
-    const { folderId, userIds } = authReq.body;
-    const user = authReq.user;
+    const { folderId, userIds, user } = req.body;
 
     if (!user) {
       res.status(401).json({ error: "Unauthorized" });

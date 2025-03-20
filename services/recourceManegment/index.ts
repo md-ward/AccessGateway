@@ -17,14 +17,14 @@ const server = http.createServer(app);
 
 const port = process.env.Recourse_Port;
 
-app.use("/stock", stockRouter);
+app.use("/", stockRouter);
 
 mongoose
   .connect(process.env.Recourse_DB_URL as string)
   .then(() => {
     console.log("Connected to MongoDB");
     server.listen(port, () => {
-      console.log(`Server is running on port ${port}`);
+      console.log(`Recourses Server is running on port ${port}`);
     });
   })
   .catch((error) => {

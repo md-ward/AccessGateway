@@ -8,17 +8,17 @@ import setupProxies from "./middleware/proxy";
 import System from "./schema/companySchema";
 import { Socket } from "net";
 import companyRouter from "./routes/companyRouter";
-var cookieParser = require("cookie-parser");
+import cookieParser from "cookie-parser";
 dotenv.config();
 
 const app = express();
+const server = http.createServer(app); // ✅ Create the HTTP server separately
 
-app.use(cors({ origin: "*" }));
+app.use(cors({ origin: "*" })); 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
-app.use("/api/comp", companyRouter);
-const server = http.createServer(app); // ✅ Create the HTTP server separately
+app.use("/comp", companyRouter);
 // ✅ Pass the server instance to `setupProxies`
 setupProxies(app, server, ROUTES);
 

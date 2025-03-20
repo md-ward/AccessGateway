@@ -36,7 +36,7 @@ export const createCompany = async (
     });
 
     const user = new User({
-      role: Role.ADMIN,
+      role: Role.OWNER,
       name,
       email,
       password,
@@ -47,7 +47,6 @@ export const createCompany = async (
 
     const token = await generateToken(
       { id: user._id, role: user.role, company: user.comp },
-      "OWNER",
       ExpiryOption.oneMonth
     );
     res.cookie("token", token, { httpOnly: true });

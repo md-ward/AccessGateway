@@ -5,6 +5,7 @@ export enum Service {
   ATTACHMENTS = "attachments",
   DRIVE = "drive",
   STOCK = "stock",
+  ALL = "all"
 }
 
 // Define the interface for TypeScript

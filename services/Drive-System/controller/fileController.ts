@@ -7,14 +7,12 @@ import { Folder } from "../schema/folderSchema";
 import { User } from "../../../src/schema/userSchema";
 //tools import
 import cloudinaryController from "../middlewares/fileUpload";
-import { AuthRequest } from "../../../src/middleware/auth";
 
 //create and upload file
 export const uploadFileAPI = async (
   req: Request,
   res: Response
 ): Promise<void> => {
-  const authReq = req as AuthRequest;
   try {
     if (!req.file) {
       res.status(400).json({ message: "No file uploaded" });
@@ -22,7 +20,7 @@ export const uploadFileAPI = async (
 
     const { originalname, mimetype, size, buffer } = req.file!;
     const { folderId } = req.body;
-    const userId = authReq.user?._id as Types.ObjectId; // Assuming user ID is available in req.user
+    const userId = req.body.user?._id as Types.ObjectId; // Assuming user ID is available in req.user
 
     if (!userId) {
       res.status(401).json({ message: "Unauthorized" });
@@ -70,8 +68,7 @@ export const getFileByIdAPI = async (
   req: Request,
   res: Response
 ): Promise<void> => {
-  const authReq = req as AuthRequest;
-  const user = authReq.user; // Ensure userId is a string
+  const user = req.body.user; // Ensure userId is a string
 
   try {
     const { fileId } = req.params;
@@ -109,10 +106,9 @@ export const shareFileAPI = async (
   req: Request,
   res: Response
 ): Promise<void> => {
-  const authReq = req as AuthRequest;
   try {
-    const { fileId, userIds } = authReq.body;
-    const user = authReq.user;
+    const { fileId, userIds } = req.body;
+    const user = req.body.user;
 
     if (!user) {
       res.status(401).json({ error: "Unauthorized" });
@@ -125,7 +121,7 @@ export const shareFileAPI = async (
     }
 
     if (!Types.ObjectId.isValid(fileId)) {
-      res.status(400).json({ error: "Invalid folder ID" });
+      res.status(400).json({ error: "Invalid folder ID" });  
     }
 
     const file = await File.findOne({

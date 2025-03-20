@@ -14,7 +14,7 @@ export interface User extends Document {
   password: string;
   team?: string;
   role?: Role;
-  services?: Service[] | "All";
+  services?: Service[] ;
 
   comp: Schema.Types.ObjectId[];
 }
@@ -25,6 +25,16 @@ const userSchema = new Schema<User>(
       type: String,
       required: true,
       // unique: true,
+    },
+    role: {
+      type: String,
+      enum: Object.values(Role),
+      required: true,
+    },
+    services: {
+      type: [String],
+      enum: Object.values(Service),
+      required: false,
     },
     email: {
       type: String,

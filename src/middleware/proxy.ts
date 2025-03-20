@@ -2,6 +2,7 @@ import { Express } from "express";
 import { createProxyMiddleware } from "http-proxy-middleware";
 import { Server } from "http";
 import { Socket } from "net";
+import { verifyToken } from "./authCheck";
 
 const setupProxies = (
   app: Express,
@@ -13,10 +14,11 @@ const setupProxies = (
 ) => {
   routes.forEach((r) => {
     const proxyMiddleware = createProxyMiddleware(r.proxy);
-    app.use(r.url, proxyMiddleware);
+
+    app.use(r.url, verifyToken, proxyMiddleware);
 
     // ✅ Handle WebSocket upgrades
-    if (r.proxy.ws) {
+    if (r.url === "/chat" && r.proxy.ws) {
       server.on("upgrade", (req, socket: Socket, head) => {
         console.log(`WebSocket upgrade request for ${req.url}`);
 

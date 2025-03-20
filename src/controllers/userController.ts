@@ -3,7 +3,7 @@ import { User } from "../schema/userSchema";
 import bcrypt from "bcrypt";
 import { ExpiryOption, generateToken } from "../utils/generateTokens";
 
-export const registerUser = async (
+export const registerUser = async ( 
   req: Request,
   res: Response
 ): Promise<void> => {
@@ -16,11 +16,10 @@ export const registerUser = async (
         role: user.role,
         services: user.services,
       },
-      "USER",
       ExpiryOption.oneMonth
     );
     res.cookie("token", token, { httpOnly: true });
-    res.status(201).send({ user, token });
+    res.status(201).send('User registered successfully');
   } catch (error) {
     res.status(400).send(error);
   }
@@ -34,13 +33,13 @@ export const loginUser = async (req: Request, res: Response): Promise<void> => {
     if (user) {
       const isMatch = await bcrypt.compare(password, user.password as string);
       if (isMatch && email === user.email) {
+    
         const token = await generateToken(
           {
             id: user.id,
             role: user.role,
             services: user.services,
           },
-          "USER",
           ExpiryOption.oneMonth
         );
         res.cookie("token", token, { httpOnly: true });

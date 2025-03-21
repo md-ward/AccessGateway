@@ -19,6 +19,8 @@ const setupProxies = (
 
     // ✅ Handle WebSocket upgrades
     if (r.url === "/chat" && r.proxy.ws) {
+      console.log(`Setting up WebSocket proxy for ${r.url}`); 
+      
       server.on("upgrade", (req, socket: Socket, head) => {
         console.log(`WebSocket upgrade request for ${req.url}`);
 
@@ -26,7 +28,7 @@ const setupProxies = (
         proxyMiddleware.upgrade(req, socket, head);
       });
     }
-  });
+  }); 
 };
 
 export default setupProxies;

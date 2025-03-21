@@ -48,6 +48,9 @@ const ROUTES = [
       target: `http://localhost:${process.env.Chat_Port}`,
       changeOrigin: true,
       ws: true, // Enable WebSocket proxying
+      pathRewrite: {
+        [`^/chat`]: "",
+      },
       on: {
         proxyReq: (proxyReq: ClientRequest, req: Request, res: Response) => {
           // checkServiceAccess(req, res, Service.CHATTING);
@@ -58,36 +61,6 @@ const ROUTES = [
             proxyReq.write(bodyData);
           }
         },
-        // proxyReqWs: (
-        //   proxyReq: ClientRequest,
-        //   req: Request,
-        //   socket: any,
-        //   head: any
-        // ) => {
-        //   console.log("Handling WebSocket Connection for /chat");
-
-        //   // Ensure it's a WebSocket upgrade request
-        //   if (
-        //     !req.headers.upgrade ||
-        //     req.headers.upgrade.toLowerCase() !== "websocket"
-        //   ) {
-        //     console.error("Invalid WebSocket request");
-        //     socket.destroy();
-        //     return;
-        //   }
-
-        //   // Allow only authorized WebSocket connections
-        //   if (!req.headers.authorization) {
-        //     console.error("Unauthorized WebSocket request");
-        //     socket.destroy();
-        //     return;
-        //   }
-
-        //   // Properly handle WebSocket requests
-        //   socket.on("error", (err: any) =>
-        //     console.error("WebSocket Error:", err)
-        //   );
-        // },
       },
     },
   },

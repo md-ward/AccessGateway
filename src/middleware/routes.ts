@@ -2,6 +2,8 @@ import { Request, Response } from "express";
 import { ClientRequest } from "http";
 import dotenv from "dotenv";
 import { Service } from "../schema/companySchema";
+import { Socket } from "socket.io";
+import { checkToken } from "./authCheck";
 
 dotenv.config();
 
@@ -16,6 +18,28 @@ function checkServiceAccess(req: Request, res: Response, service: Service) {
   }
 }
 
+function checkServiceAccessWs(ws: ClientRequest, service: Service) {
+  const token = ws.getHeaders().authorization;
+  console.log({ token });
+  if (token) {
+    checkToken(token)
+      .then((valid) => {
+        if (valid && valid.decoded) {
+          console.log({ decoded: valid.decoded });
+          if (
+            !valid?.decoded.services?.includes(service) &&
+            !valid?.decoded.services.includes("all")
+          ) {
+            ws.write("HTTP/1.1 403 Access Denied\r\n\r\n");
+            ws.destroy();
+          }
+        }
+      })
+      .catch((error) => {
+        console.error("Error validating token:", error);
+      });
+  }
+}
 const ROUTES = [
   {
     service: Service.STOCK,
@@ -60,6 +84,9 @@ const ROUTES = [
             proxyReq.setHeader("Content-Type", "application/json");
             proxyReq.write(bodyData);
           }
+        },
+        proxyReqWs: (proxyReq: ClientRequest, req: Request) => {
+          checkServiceAccessWs(proxyReq, Service.CHATTING);
         },
       },
     },

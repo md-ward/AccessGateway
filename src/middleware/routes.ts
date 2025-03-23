@@ -2,7 +2,6 @@ import { Request, Response } from "express";
 import { ClientRequest } from "http";
 import dotenv from "dotenv";
 import { Service } from "../schema/companySchema";
-import { Socket } from "socket.io";
 import { checkToken } from "./authCheck";
 
 dotenv.config();
@@ -17,29 +16,32 @@ function checkServiceAccess(req: Request, res: Response, service: Service) {
     return;
   }
 }
-
-function checkServiceAccessWs(ws: ClientRequest, service: Service) {
+async function checkServiceAccessWs(
+  ws: ClientRequest,
+  service: Service
+): Promise<string | void> {
   const token = ws.getHeaders().authorization;
-  console.log({ token });
   if (token) {
-    checkToken(token)
-      .then((valid) => {
-        if (valid && valid.decoded) {
-          console.log({ decoded: valid.decoded });
-          if (
-            !valid?.decoded.services?.includes(service) &&
-            !valid?.decoded.services.includes("all")
-          ) {
-            ws.write("HTTP/1.1 403 Access Denied\r\n\r\n");
-            ws.destroy();
-          }
+    try {
+      const valid = await checkToken(token);
+      if (valid && valid.decoded) {
+        if (
+          !valid?.decoded.services?.includes(service) &&
+          !valid?.decoded.services.includes("all")
+        ) {
+          ws.write("HTTP/1.1 403 Access Denied\r\n\r\n");
+          ws.destroy();
+        } else {
+          console.log({ idFromIf: valid.decoded.id });
+          return valid.decoded.id as string;
         }
-      })
-      .catch((error) => {
-        console.error("Error validating token:", error);
-      });
+      }
+    } catch (error) {
+      console.error("Error validating token:", error);
+    }
   }
 }
+
 const ROUTES = [
   {
     service: Service.STOCK,
@@ -76,7 +78,7 @@ const ROUTES = [
         [`^/chat`]: "",
       },
       on: {
-        proxyReq: (proxyReq: ClientRequest, req: Request, res: Response) => {
+        proxyReq: (proxyReq: ClientRequest, req: Request) => {
           // checkServiceAccess(req, res, Service.CHATTING);
           if (req.body) {
             const bodyData = JSON.stringify(req.body);
@@ -85,8 +87,13 @@ const ROUTES = [
             proxyReq.write(bodyData);
           }
         },
-        proxyReqWs: (proxyReq: ClientRequest, req: Request) => {
-          checkServiceAccessWs(proxyReq, Service.CHATTING);
+        proxyReqWs: async (proxyReq: ClientRequest) => {
+          const id = await checkServiceAccessWs(proxyReq, Service.CHATTING);
+          console.log({ id });
+
+          if (id) {
+            proxyReq.setHeader("x-user-id", id);
+          }
         },
       },
     },

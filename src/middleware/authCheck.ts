@@ -6,7 +6,7 @@ export async function verifyToken(
   res: Response,
   next: NextFunction
 ): Promise<void> {
-  const token = req.cookies.token;   
+  const token = req.cookies.token;    
 
   try {
     if (!token) {

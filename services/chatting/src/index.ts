@@ -52,20 +52,6 @@ try {
     next();
   });
 
-  chatNamespace.on("connection", (socket: Socket) => {
-    console.log(`🔵 WebSocket Connected: ${socket.id}`);
-    console.log(
-      `🔹 Handshake Headers: ${JSON.stringify(
-        socket.handshake.headers,
-        null,
-        2
-      )}`
-    );
-    console.log(
-      `🔹 Query Params: ${JSON.stringify(socket.handshake.query, null, 2)}`
-    );
-  });
-
   // ✅ Allow WebSocket connections via proxy
   io.engine.on("headers", (headers) => {
     headers["Access-Control-Allow-Origin"] = "*";
@@ -83,13 +69,21 @@ try {
 
   // ✅ Handle New WebSocket Connection
   chatNamespace.on("connection", (socket: Socket) => {
-    console.log(`🔵 User connected: ${socket.id}`);
+    // console.log(`🔵 User connected: ${socket.id}`);
 
     // ✅ Extract systemId and userId from handshake headers
+    console.log(
+      `🔹 Handshake Headers: ${JSON.stringify(
+        socket.handshake.headers,
+        null,
+        2
+      )}`
+    );
+
     const systemId = socket.handshake.headers["x-system-id"] as string;
     const userId = socket.handshake.query.user as string;
 
-    console.log(`🔹 User ID: ${userId}, System ID: ${systemId}`);
+    console.log({ headers: socket.handshake.headers });
 
     // ✅ Store user in onlineUsers map
     if (!onlineUsers[systemId]) {
@@ -97,7 +91,7 @@ try {
     }
     onlineUsers[systemId][userId] = socket.id;
 
-    console.log(`✅ Stored user: ${JSON.stringify(onlineUsers, null, 2)}`);
+    // console.log(`✅ Stored user: ${JSON.stringify(onlineUsers, null, 2)}`);
 
     // ✅ Listen for messages
     socket.on("sendMessage", async (data) => {

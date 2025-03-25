@@ -78,22 +78,8 @@ const ROUTES = [
         [`^/chat`]: "",
       },
       on: {
-        proxyReq: (proxyReq: ClientRequest, req: Request) => {
-          // checkServiceAccess(req, res, Service.CHATTING);
-          if (req.body) {
-            const bodyData = JSON.stringify(req.body);
-            proxyReq.setHeader("Content-Length", Buffer.byteLength(bodyData));
-            proxyReq.setHeader("Content-Type", "application/json");
-            proxyReq.write(bodyData);
-          }
-        },
         proxyReqWs: async (proxyReq: ClientRequest) => {
-          const id = await checkServiceAccessWs(proxyReq, Service.CHATTING);
-          console.log({ id });
-
-          if (id) {
-            proxyReq.setHeader("x-user-id", id);
-          }
+          proxyReq.setHeader("x-test-id", "test");
         },
       },
     },

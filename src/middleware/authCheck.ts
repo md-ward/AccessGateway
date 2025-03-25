@@ -1,12 +1,27 @@
 import { NextFunction, Request, Response } from "express";
 import jwt from "jsonwebtoken";
 
+export async function verifyTokenWs(
+  token: string
+): Promise<{ id: string } | null> {
+  try {
+    const decoded = jwt.verify(
+      token,
+      process.env.COMPANY_SECRET as string
+    ) as jwt.JwtPayload;
+    return decoded && decoded.id ? { id: decoded.id } : null;
+  } catch (error) {
+    console.error("WebSocket token verification failed:", error);
+    return null;
+  }
+}
+
 export async function verifyToken(
   req: Request,
   res: Response,
   next: NextFunction
 ): Promise<void> {
-  const token = req.cookies.token;    
+  const token = req.cookies.token;
 
   try {
     if (!token) {
@@ -72,7 +87,7 @@ export async function checkToken(token: string) {
     }
 
     return {
-      valid: true,  
+      valid: true,
       expired: false,
       decoded,
     };

@@ -1,15 +1,14 @@
 import { NextFunction, Request, Response } from "express";
 import jwt from "jsonwebtoken";
+import { UserToken } from "../utils/types";
 
-export async function verifyTokenWs(
-  token: string
-): Promise<{ id: string } | null> {
+export async function verifyTokenWs(token: string): Promise<UserToken | null> {
   try {
     const decoded = jwt.verify(
       token,
       process.env.COMPANY_SECRET as string
     ) as jwt.JwtPayload;
-    return decoded && decoded.id ? { id: decoded.id } : null;
+    return decoded ? (decoded as UserToken) : null;
   } catch (error) {
     console.error("WebSocket token verification failed:", error);
     return null;

@@ -3,6 +3,7 @@ import generateExpiryDate from "../utils/apiExpiry";
 import Company, { Service } from "../schema/companySchema";
 import { Role, User } from "../schema/userSchema";
 import { ExpiryOption, generateToken } from "../utils/generateTokens";
+import { UserToken } from "../utils/types";
 
 // Create Company
 export const createCompany = async (
@@ -46,7 +47,12 @@ export const createCompany = async (
     await Promise.all([company.save(), user.save()]);
 
     const token = await generateToken(
-      { id: user._id, role: user.role, company: user.comp },
+      {
+        id: user._id,
+        role: user.role,
+        name: user.name,
+        company: user.comp.map((id) => id.toString()),
+      } as UserToken,
       ExpiryOption.oneMonth
     );
     res.cookie("token", token, { httpOnly: true });
@@ -79,7 +85,7 @@ export const extendApiKey = async (
       },
       {
         new: true,
-      }
+      } 
     );
 
     if (!company) {
